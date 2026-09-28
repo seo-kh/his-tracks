@@ -1,46 +1,51 @@
 import "dotenv/config";
+import path from "node:path";
 import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import path from "path";
-import { authRouter } from "./auth";
+import { app } from "./app";
 
-const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
 
-// ── Middleware ────────────────────────────────────────────────────────────────
+async function startServer() {
+  const isDev = process.env.NODE_ENV !== "production";
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? "*", credentials: true }));
-app.use(express.json());
-app.use(cookieParser());
+  if (isDev) {
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      // Vite dev middleware를 Express에 마운트하여 프론트엔드 HMR 및 SPA 라우팅 제공
+      app.use(vite.middlewares);
+      console.log("⚡ Vite development middleware loaded.");
+    } catch (err) {
+      console.warn("⚠️ Vite middleware load failed, falling back to static dist:", err);
+      mountStatic(app);
+    }
+  } else {
+    // 프로덕션: 빌드된 React 정적 파일(dist/) 서빙
+    mountStatic(app);
+  }
 
-// ── API routes ────────────────────────────────────────────────────────────────
+  app.listen(PORT, () => {
+    console.log(`\n🎵  His Tracks Server running at: http://localhost:${PORT}`);
+    console.log(`    - React App   : http://localhost:${PORT}`);
+    console.log(`    - API Health  : http://localhost:${PORT}/health`);
+    console.log(`    - Google Auth : http://localhost:${PORT}/auth/google\n`);
+  });
+}
 
-app.use("/auth", authRouter);
+function mountStatic(serverApp: express.Express) {
+  const staticDir = process.env.STATIC_DIR ?? path.resolve(process.cwd(), "dist");
+  serverApp.use(express.static(staticDir));
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", name: "His Tracks", version: "1.0.0" });
-});
+  // SPA fallback: 정적 파일이나 API에 매칭되지 않은 요청은 index.html 서빙 (Express v4/v5 호환)
+  serverApp.use((_req, res) => {
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+}
 
-// ── Static (React SPA) ────────────────────────────────────────────────────────
-// 운영 환경: React 빌드 결과물(code/dist)을 Express가 직접 서빙한다.
-// STATIC_DIR 환경변수로 경로를 바꿀 수 있다.
-
-const staticDir =
-  process.env.STATIC_DIR ?? path.resolve(__dirname, "../../code/dist");
-
-app.use(express.static(staticDir));
-
-// React Router SPA 폴백 — 알 수 없는 경로는 index.html로 보낸다.
-app.get("*", (_req, res) => {
-  // res.sendFile(path.join(staticDir, "index.html"));
-  res.sendFile(path.join(staticDir, "../../index.html"));
-});
-
-// ── Start ─────────────────────────────────────────────────────────────────────
-
-app.listen(PORT, () => {
-  console.log(`\n🎵  His Tracks  |  http://localhost:${PORT}`);
-  console.log(`    /auth/google  →  Google 로그인 시작`);
-  console.log(`    /health       →  서버 상태 확인\n`);
+startServer().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
 });

@@ -19,17 +19,30 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     server: {
       host: '0.0.0.0',
-      port: parseInt(process.env.PORT || '8443'),
-      strictPort: true,
+      port: parseInt(process.env.PORT || '5173'),
+      proxy: {
+        '/auth': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+        '/health': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+      },
     },
     preview: {
       host: '0.0.0.0',
-      port: parseInt(process.env.PORT || '8443'),
+      port: parseInt(process.env.PORT || '5173'),
     },
   }
 })

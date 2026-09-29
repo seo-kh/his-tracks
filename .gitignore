@@ -1,7 +1,8 @@
-
-
 node_modules/
 dist/
+dist-server/
+.vercel/
 .env
+.env.local
 AGENTS.md
 CLAUDE.md

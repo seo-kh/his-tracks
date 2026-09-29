@@ -1,26 +1,42 @@
 {
-  "name": "figma-make-app",
+  "name": "his-tracks",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx watch server/src/index.ts",
+    "dev:server": "tsx watch server/src/index.ts",
+    "dev:client": "vite",
     "build": "vite build",
+    "build:server": "tsc -p server/tsconfig.json",
+    "build:all": "vite build && tsc -p server/tsconfig.json",
+    "start": "cross-env NODE_ENV=production tsx server/src/index.ts",
     "preview": "vite preview",
     "format": "oxfmt"
   },
   "dependencies": {
+    "agy": "^0.0.0",
+    "axios": "^1.20.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/vite": "^4.0.0",
+    "cross-env": "^10.1.0",
     "oxfmt": "^0.2.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0",
     "vite": "^8.0.5"
   }

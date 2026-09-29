@@ -4,14 +4,36 @@
   <meta charset="UTF-8" />
   <title>Google 로그인 완료</title>
   <style>
-    body { margin: 0; background: #111; color: #e0e0e0; font-family: -apple-system, sans-serif;
-      display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-    p { font-size: 15px; color: #8e8e93; }
+    body {
+      margin: 0;
+      background: #111;
+      color: #e0e0e0;
+      font-family: -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    p { font-size: 15px; color: #8e8e93; line-height: 1.5; margin: 0 0 16px; }
+    button {
+      background: #007AFF;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div>
     <p>로그인이 완료되었습니다.<br>이 창은 자동으로 닫힙니다.</p>
+    <button onclick="window.close()">창 닫기</button>
   </div>
   <script>
     (function () {
@@ -27,23 +49,34 @@
         return params;
       }
 
+      function notify(data) {
+        if (window.opener) {
+          try {
+            window.opener.postMessage(data, window.location.origin);
+          } catch (e) {}
+        }
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            var bc = new BroadcastChannel('google_oauth');
+            bc.postMessage(data);
+            bc.close();
+          }
+        } catch (e) {}
+        try {
+          localStorage.setItem('google_oauth_result', JSON.stringify({ data: data, time: Date.now() }));
+        } catch (e) {}
+        window.close();
+      }
+
       // Implicit flow — token in hash
       if (hash) {
         var p = parseParams(hash);
         if (p.access_token) {
-          window.opener && window.opener.postMessage(
-            { type: 'GOOGLE_OAUTH_TOKEN', access_token: p.access_token, expires_in: p.expires_in },
-            window.location.origin
-          );
-          window.close();
+          notify({ type: 'GOOGLE_OAUTH_TOKEN', access_token: p.access_token, expires_in: p.expires_in });
           return;
         }
         if (p.error) {
-          window.opener && window.opener.postMessage(
-            { type: 'GOOGLE_OAUTH_TOKEN', error: p.error },
-            window.location.origin
-          );
-          window.close();
+          notify({ type: 'GOOGLE_OAUTH_TOKEN', error: p.error });
           return;
         }
       }
@@ -52,19 +85,11 @@
       if (query) {
         var q = parseParams(query);
         if (q.code) {
-          window.opener && window.opener.postMessage(
-            { type: 'GOOGLE_OAUTH_CODE', code: q.code },
-            window.location.origin
-          );
-          window.close();
+          notify({ type: 'GOOGLE_OAUTH_CODE', code: q.code });
           return;
         }
         if (q.error) {
-          window.opener && window.opener.postMessage(
-            { type: 'GOOGLE_OAUTH_CODE', error: q.error },
-            window.location.origin
-          );
-          window.close();
+          notify({ type: 'GOOGLE_OAUTH_CODE', error: q.error });
           return;
         }
       }

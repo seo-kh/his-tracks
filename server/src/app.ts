@@ -1,4 +1,6 @@
 import "dotenv/config";
+import path from "node:path";
+import fs from "node:fs";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -19,6 +21,19 @@ app.use(cookieParser());
 
 // ── API Routes ──────────────────────────────────────────────────────────────
 app.use("/auth", authRouter);
+
+// OAuth popup callback page handler
+app.get(["/oauth/callback", "/oauth/callback.html"], (_req, res) => {
+  const publicPath = path.resolve(process.cwd(), "public/oauth/callback.html");
+  const distPath = path.resolve(process.cwd(), "dist/oauth/callback.html");
+  if (fs.existsSync(publicPath)) {
+    res.sendFile(publicPath);
+  } else if (fs.existsSync(distPath)) {
+    res.sendFile(distPath);
+  } else {
+    res.status(404).send("Callback page not found");
+  }
+});
 
 app.get("/health", (_req, res) => {
   res.json({

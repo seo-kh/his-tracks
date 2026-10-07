@@ -66,18 +66,10 @@ export function PlaylistScreen() {
       : b.createdAt - a.createdAt,
   )
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100dvh",
-        background: "#000",
-        overflow: "hidden",
-      }}
-    >
-      {/* Top bar */}
-      <div
+  // ----------- UI --------------
+
+  const TopBar = () => {
+   return <div
         className="playlist-topbar"
         style={{ padding: "16px 16px 10px", flexShrink: 0 }}
       >
@@ -89,37 +81,10 @@ export function PlaylistScreen() {
           }}
         >
           {/* + button */}
-          <button
-            onClick={() => {
-              setCreateName("")
-              setShowCreateSheet(true)
-            }}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              background: "#1c1c1e",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-            }}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            >
-              <line x1="9" y1="2" x2="9" y2="16" />
-              <line x1="2" y1="9" x2="16" y2="9" />
-            </svg>
-          </button>
+          <AddButton onClick={() => {
+            setCreateName("")
+            setShowCreateSheet(true)
+          }} />
 
           {/* Title pill */}
           <div
@@ -133,109 +98,46 @@ export function PlaylistScreen() {
           </div>
 
           {/* ... button */}
-          <div style={{ position: "relative" }}>
-            <button
-              onClick={() => setShowSortMenu((v) => !v)}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: "#1c1c1e",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-              }}
-            >
-              <svg width="18" height="5" viewBox="0 0 18 5" fill="white">
-                <circle cx="2" cy="2.5" r="2" />
-                <circle cx="9" cy="2.5" r="2" />
-                <circle cx="16" cy="2.5" r="2" />
-              </svg>
-            </button>
-            {showSortMenu && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 50,
-                  zIndex: 100,
-                  background: "#1c1c1e",
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
-                  minWidth: 160,
-                  border: "1px solid #2c2c2e",
-                }}
-              >
-                <div
+          <ContextModal 
+          show={showSortMenu}
+          setShow={() => { setShowSortMenu((v) => !v) }}
+          child={
+           <SortMenu>
+                <SortElement 
+                  name="이름순"
+                  isSelected={sortOrder === "name"}
                   onClick={() => {
                     setSortOrder("name")
                     setShowSortMenu(false)
-                  }}
-                  style={{
-                    padding: "13px 18px",
-                    cursor: "pointer",
-                    color: sortOrder === "name" ? "#007AFF" : "#fff",
-                    fontSize: 15,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderBottom: "1px solid #2c2c2e",
-                  }}
-                >
-                  이름순
-                  {sortOrder === "name" && (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#007AFF"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-                <div
+                  }} /> 
+
+                <SortElement
+                  name="날짜순"
+                  isSelected={sortOrder === "date"}
                   onClick={() => {
                     setSortOrder("date")
                     setShowSortMenu(false)
                   }}
-                  style={{
-                    padding: "13px 18px",
-                    cursor: "pointer",
-                    color: sortOrder === "date" ? "#007AFF" : "#fff",
-                    fontSize: 15,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  날짜순
-                  {sortOrder === "date" && (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#007AFF"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                 />
+              </SortMenu> 
+            }
+          />
         </div>
-      </div>
+      </div> 
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100dvh",
+        background: "#000",
+        overflow: "hidden",
+      }}
+    >
+      {/* Top bar */}
+      <TopBar />
 
       {/* Playlist grid */}
       <div
@@ -724,5 +626,113 @@ export function PlaylistScreen() {
     </div>
   )
 }
+
+function ContextModal({ show, setShow, child }: { show: boolean, setShow: () => void, child: React.ReactNode }) {
+    return <div style={{ position: "relative" }}>
+            <button
+              onClick={setShow}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: "#1c1c1e",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+              }}
+            >
+              <svg width="18" height="5" viewBox="0 0 18 5" fill="white">
+                <circle cx="2" cy="2.5" r="2" />
+                <circle cx="9" cy="2.5" r="2" />
+                <circle cx="16" cy="2.5" r="2" />
+              </svg>
+            </button>
+            { show &&  child }
+          </div>
+}
+
+function SortMenu({ children }: { children: React.ReactNode }) {
+  return <div
+            style={{
+              position: "absolute",
+              right: 0,
+              top: 50,
+              zIndex: 100,
+              background: "#1c1c1e",
+              borderRadius: 12,
+              overflow: "hidden",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+              minWidth: 160,
+              border: "1px solid #2c2c2e",
+            }}
+          >
+            {
+              children
+            }
+          </div>
+}
+
+function SortElement({ name, isSelected, onClick }: { name: string, isSelected: boolean, onClick: () => void }) {
+  return <div
+            onClick={onClick}
+            style={{
+              padding: "13px 18px",
+              cursor: "pointer",
+              color: isSelected ? "#007AFF" : "#fff",
+              fontSize: 15,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {name}
+            {isSelected && (
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#007AFF"
+                strokeWidth="3"
+                strokeLinecap="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </div>
+}
+
+function AddButton({ onClick }: { onClick: () => void }) {
+  return <button
+            onClick={onClick}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: "#1c1c1e",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+            }}>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.2"
+              strokeLinecap="round">
+              <line x1="9" y1="2" x2="9" y2="16" />
+              <line x1="2" y1="9" x2="16" y2="9" />
+            </svg>
+          </button>
+}
+
 
 export default PlaylistScreen

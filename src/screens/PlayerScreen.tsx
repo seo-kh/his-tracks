@@ -39,7 +39,7 @@ export function PlayerScreen() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const dragStartRef = useRef<{ x: number y: number moved: boolean }>({
+  const dragStartRef = useRef<{ x: number, y: number, moved: boolean }>({
     x: 0,
     y: 0,
     moved: false,

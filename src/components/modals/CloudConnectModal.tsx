@@ -60,7 +60,7 @@ export function CloudConnectModal({
   const [saveDirName, setSaveDirName] = useState("")
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const dirHandleRef = useRef<FileSystemDirectoryHandle | null>(null)
-  const [folderStack, setFolderStack] = useState<{ id: string name: string }[]>(
+  const [folderStack, setFolderStack] = useState<{ id: string, name: string }[]>(
     [],
   )
 

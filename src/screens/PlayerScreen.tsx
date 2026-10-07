@@ -776,7 +776,7 @@ export function PlayerScreen() {
       <CloudConnectModal
         open={isConnectModalOpen}
         onClose={handleCloseConnect}
-        realFileInputRef={fileInputRef}
+        //realFileInputRef={fileInputRef}
         onImport={async (files) => {
           if (!files.length) return
           const existingNames = new Set(tracks.map((t) => t.name))

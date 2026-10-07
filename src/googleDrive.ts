@@ -108,34 +108,86 @@ export async function signInWithGoogle(clientId: string): Promise<string> {
       return
     }
 
-    const handler = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return
-      if (event.data?.type !== "GOOGLE_OAUTH_CODE") return
-      window.removeEventListener("message", handler)
-      popup.close()
+    let isCompleted = false;
+    let pollClosed: ReturnType<typeof setInterval> | null = null;
+    const bc = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("google_oauth") : null;
 
-      const { code, error } = event.data
-      if (error) { reject(new Error(error)); return }
+    const cleanup = () => {
+      isCompleted = true;
+      if (pollClosed) {
+        clearInterval(pollClosed);
+        pollClosed = null;
+      }
+      window.removeEventListener("message", handler);
+      window.removeEventListener("storage", storageHandler);
+      if (bc) {
+        bc.removeEventListener("message", bcHandler);
+        bc.close();
+      }
+    };
 
+    const processCode = async (code: string, error?: string) => {
+      if (isCompleted) return;
+      cleanup();
+      if (popup && !popup.closed) {
+        try {
+          popup.close();
+        } catch {
+          /* ignore */
+        }
+      }
+      if (error) {
+        reject(new Error(error));
+        return;
+      }
       try {
-        const token = await exchangeCodeForToken(clientId, code, verifier, redirectUri)
-        resolve(token)
+        const token = await exchangeCodeForToken(clientId, code, verifier, redirectUri);
+        resolve(token);
       } catch (e) {
-        reject(e)
+        reject(e);
       }
-    }
+    };
 
-    window.addEventListener("message", handler)
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== "GOOGLE_OAUTH_CODE") return;
+      processCode(event.data.code, event.data.error);
+    };
 
-    // Detect popup closed without completing auth
-    const pollClosed = setInterval(() => {
+    const bcHandler = (event: MessageEvent) => {
+      if (event.data?.type !== "GOOGLE_OAUTH_CODE") return;
+      processCode(event.data.code, event.data.error);
+    };
+    if (bc) bc.addEventListener("message", bcHandler);
+
+    const storageHandler = (e: StorageEvent) => {
+      if (e.key === "google_oauth_result" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.data?.type === "GOOGLE_OAUTH_CODE") {
+            localStorage.removeItem("google_oauth_result");
+            processCode(parsed.data.code, parsed.data.error);
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+
+    window.addEventListener("message", handler);
+    window.addEventListener("storage", storageHandler);
+
+    pollClosed = setInterval(() => {
       if (popup.closed) {
-        clearInterval(pollClosed)
-        window.removeEventListener("message", handler)
-        reject(new Error("AbortError"))
+        setTimeout(() => {
+          if (!isCompleted) {
+            cleanup();
+            reject(new Error("AbortError"));
+          }
+        }, 500);
       }
-    }, 500)
-  })
+    }, 500);
+  });
 }
 
 async function exchangeCodeForToken(
@@ -154,62 +206,116 @@ async function exchangeCodeForToken(
       grant_type: "authorization_code",
       redirect_uri: redirectUri,
     }),
-  })
+  });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error_description ?? "Token exchange failed")
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error_description ?? "Token exchange failed");
   }
-  const json = await res.json()
-  storeToken(json.access_token, json.expires_in ?? 3600)
-  return json.access_token
+  const json = await res.json();
+  storeToken(json.access_token, json.expires_in ?? 3600);
+  return json.access_token;
 }
 
 // Implicit flow fallback — no PKCE, works without callback page
 // Returns token directly from popup URL hash (token is short-lived, no refresh)
 export async function signInImplicit(clientId: string): Promise<string> {
-  const existing = getStoredToken()
-  if (existing) return existing
+  const existing = getStoredToken();
+  if (existing) return existing;
 
-  const redirectUri = `${window.location.origin}/oauth/callback`
+  const redirectUri = `${window.location.origin}/oauth/callback`;
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "token",
     scope: "https://www.googleapis.com/auth/drive.readonly",
     prompt: "consent",
-  })
+  });
 
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 
   return new Promise((resolve, reject) => {
-    const popup = window.open(authUrl, "google_oauth", "width=520,height=640,left=200,top=100")
+    const popup = window.open(authUrl, "google_oauth", "width=520,height=640,left=200,top=100");
     if (!popup) {
-      reject(new Error("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요."))
-      return
+      reject(new Error("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요."));
+      return;
     }
+
+    let isCompleted = false;
+    let pollClosed: ReturnType<typeof setInterval> | null = null;
+    const bc = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("google_oauth") : null;
+
+    const cleanup = () => {
+      isCompleted = true;
+      if (pollClosed) {
+        clearInterval(pollClosed);
+        pollClosed = null;
+      }
+      window.removeEventListener("message", handler);
+      window.removeEventListener("storage", storageHandler);
+      if (bc) {
+        bc.removeEventListener("message", bcHandler);
+        bc.close();
+      }
+    };
+
+    const processToken = (accessToken: string, expiresIn?: string | number, error?: string) => {
+      if (isCompleted) return;
+      cleanup();
+      if (popup && !popup.closed) {
+        try {
+          popup.close();
+        } catch {
+          /* ignore */
+        }
+      }
+      if (error) {
+        reject(new Error(error));
+        return;
+      }
+      storeToken(accessToken, parseInt(String(expiresIn ?? "3600"), 10));
+      resolve(accessToken);
+    };
 
     const handler = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return
-      if (event.data?.type !== "GOOGLE_OAUTH_TOKEN") return
-      window.removeEventListener("message", handler)
-      popup.close()
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== "GOOGLE_OAUTH_TOKEN") return;
+      processToken(event.data.access_token, event.data.expires_in, event.data.error);
+    };
 
-      const { access_token, expires_in, error } = event.data
-      if (error) { reject(new Error(error)); return }
-      storeToken(access_token, parseInt(expires_in ?? "3600", 10))
-      resolve(access_token)
-    }
+    const bcHandler = (event: MessageEvent) => {
+      if (event.data?.type !== "GOOGLE_OAUTH_TOKEN") return;
+      processToken(event.data.access_token, event.data.expires_in, event.data.error);
+    };
+    if (bc) bc.addEventListener("message", bcHandler);
 
-    window.addEventListener("message", handler)
-
-    const pollClosed = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(pollClosed)
-        window.removeEventListener("message", handler)
-        reject(new Error("AbortError"))
+    const storageHandler = (e: StorageEvent) => {
+      if (e.key === "google_oauth_result" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.data?.type === "GOOGLE_OAUTH_TOKEN") {
+            localStorage.removeItem("google_oauth_result");
+            processToken(parsed.data.access_token, parsed.data.expires_in, parsed.data.error);
+          }
+        } catch {
+          /* ignore */
+        }
       }
-    }, 500)
-  })
+    };
+
+    window.addEventListener("message", handler);
+    window.addEventListener("storage", storageHandler);
+
+    pollClosed = setInterval(() => {
+      if (popup.closed) {
+        setTimeout(() => {
+          if (!isCompleted) {
+            cleanup();
+            reject(new Error("AbortError"));
+          }
+        }, 500);
+      }
+    }, 500);
+  });
 }
 
 // ---------------------------------------------------------------------------

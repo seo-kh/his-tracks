@@ -90,7 +90,7 @@ export function clearToken() {
 
 // Opens OAuth popup, waits for redirect back with authorization code, exchanges for token.
 // Uses PKCE so no client_secret is needed in the browser.
-export async function signInWithGoogle(clientId: string): Promise<string> {
+export async function signInWithGoogle(clientId: string, clientSecret: string): Promise<string> {
   const existing = getStoredToken()
   if (existing) return existing
 
@@ -151,7 +151,7 @@ export async function signInWithGoogle(clientId: string): Promise<string> {
         return
       }
       try {
-        const token = await exchangeCodeForToken(clientId, code, verifier, redirectUri)
+        const token = await exchangeCodeForToken(clientId, clientSecret, code, verifier, redirectUri)
         resolve(token)
       } catch (e) {
         reject(e)
@@ -202,6 +202,7 @@ export async function signInWithGoogle(clientId: string): Promise<string> {
 
 async function exchangeCodeForToken(
   clientId: string,
+  clientSecret: string,
   code: string,
   verifier: string,
   redirectUri: string,
@@ -211,10 +212,11 @@ async function exchangeCodeForToken(
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id: clientId,
+      client_secret: clientSecret,
       code,
-      code_verifier: verifier,
       grant_type: "authorization_code",
       redirect_uri: redirectUri,
+      code_verifier: verifier,
     }),
   })
   if (!res.ok) {

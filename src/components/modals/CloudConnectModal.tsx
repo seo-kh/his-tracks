@@ -24,6 +24,7 @@ interface BreadcrumbItem {
 }
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ""
+const GOOGLE_CLIENT_SECRET = import.meta.env.GOOGLE_CLIENT_SECRET ?? ""
 
 export function CloudConnectModal({ open, onClose, onImport }: CloudConnectModalProps) {
   const [token, setToken] = useState<string | null>(null)
@@ -89,7 +90,7 @@ export function CloudConnectModal({ open, onClose, onImport }: CloudConnectModal
 
   const handleLogin = async () => {
     try {
-      const newToken = await signInWithGoogle(GOOGLE_CLIENT_ID)
+      const newToken = await signInWithGoogle(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
       setToken(newToken)
     } catch (e: any) {
       setErrorMsg("Google 로그인 실패: " + e.message)

@@ -23,7 +23,7 @@ interface BreadcrumbItem {
   name: string
 }
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ""
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ""
 
 export function CloudConnectModal({ open, onClose, onImport }: CloudConnectModalProps) {
   const [token, setToken] = useState<string | null>(null)

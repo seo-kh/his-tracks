@@ -1,12 +1,18 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/auth/(.*)", "destination": "/api/index" },
-    { "source": "/health", "destination": "/api/index" },
-    { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/auth/google/callback",
+      "destination": "/api/auth/callback"
+    },
+    {
+      "source": "/auth/google",
+      "destination": "/api/auth/google"
+    },
+    {
+      "source": "/auth/logout",
+      "destination": "/api/auth/logout"
+    }
   ]
 }

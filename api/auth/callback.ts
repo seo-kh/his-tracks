@@ -134,7 +134,31 @@ export default async function handler(
       expires_in: String(token.expires_in ?? 3600),
     })
 
-    return response.redirect(`${appOrigin}/#${fragment.toString()}`)
+    const returnTo = readCookie(request, "oauth_return_to") ?? "/playlist/"
+    const target = new URL(returnTo, appOrigin)
+    target.hash = fragment.toString()
+
+    // Delete Cookies.
+    response.setHeader("Set-Cookie", [
+        [
+            "oauth_state=",
+            "HttpOnly",
+            "Secure",
+            "SameSite=Lax",
+            "Path=/",
+            "Max-Age=0",
+        ].join("; "),
+        [
+            "oauth_return_to=",
+            "HttpOnly",
+            "Secure",
+            "SameSite=Lax",
+            "Path=/",
+            "Max-Age=0",
+        ].join("; "),
+    ])
+
+    return response.redirect(target.toString())
   } catch {
     const fragment = new URLSearchParams({
       auth_error: "oauth_request_failed",

@@ -205,6 +205,30 @@ export default function CloudConnectModal({
     [],
   )
 
+  /**
+   * 여기에 초기 토큰 복원 effect를 추가합니다.
+   * 
+   * 이렇게 하면 callback 후 /cloud/ 화면이 다시 렌더링될 때:
+   * initFromHash()가 토큰을 sessionStorage에 저장
+   * CloudConnectModal이 getStoredToken()으로 토큰 조회
+   * accessToken 상태 설정
+   * step을 "files"로 변경
+   * 기존 loadItems() effect 실행
+   * Google Drive 폴더와 파일 목록 표시
+   * 기존 코드에는 다음과 같은 effect가 이미 있으므로 토큰만 상태에 넣으면 데이터 요청이 이어집니다.
+   */
+  useEffect(() => {
+    if (!open) return
+
+    const storedToken = getStoredToken()
+
+    if (!storedToken) return
+
+    setProvider("google")
+    setAccessToken(storedToken)
+    setStep("files")
+  }, [open])
+
   useEffect(() => {
     if (step === "files" && accessToken) {
       loadItems(accessToken, currentFolderId)

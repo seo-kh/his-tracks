@@ -151,7 +151,9 @@ export function initFromHash(): string | null {
  * Falls back to signInWithGoogle() popup for local dev without a server.
  */
 export function signInViaServer(): void {
-  window.location.href = "/auth/google"
+  const returnTo = `${window.location.pathname}${window.location.search}`
+
+  window.location.href = `/auth/google?returnTo=${encodeURIComponent(returnTo)}`
 }
 
 /**

@@ -8,6 +8,7 @@ import {
 } from "../../services/audio/audioStorage"
 import type { Playlist } from "../../shared/types"
 import "../../styles/index.css"
+import { initFromHash } from "../../services/cloud/googleDrive"
 
 const PLAYLIST_STORAGE_KEY = "playlists"
 const TRACK_COLORS = [
@@ -110,6 +111,8 @@ function CloudEntry() {
     />
   )
 }
+
+initFromHash()
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

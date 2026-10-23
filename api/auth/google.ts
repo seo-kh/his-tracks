@@ -12,6 +12,29 @@ const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
 // 4. Google로 리디렉션
 // 5. state는 OAuth CSRF 공격 방지를 위해 반드시 필요합니다.
 
+function sanitizeReturnTo(value: unknown): string {
+  if (typeof value !== "string") return "/playlist/"
+
+  try {
+    const url = new URL(value, "https://internal.local")
+
+    const allowedPaths = [
+      "/",
+      "/playlist/",
+      "/player/",
+      "/cloud/",
+    ]
+
+    if (!allowedPaths.includes(url.pathname)) {
+      return "/playlist/"
+    }
+
+    return `${url.pathname}${url.search}`
+  } catch {
+    return "/playlist/"
+  }
+}
+
 export default function handler(
   request: VercelRequest,
   response: VercelResponse,
@@ -29,17 +52,27 @@ export default function handler(
   }
 
   const state = randomBytes(32).toString("hex")
+  const returnTo = sanitizeReturnTo(request.query.returnTo)
 
   response.setHeader(
-    "Set-Cookie",
-    [
-      `oauth_state=${encodeURIComponent(state)}`,
-      "HttpOnly",
-      "Secure",
-      "SameSite=Lax",
-      "Path=/",
-      "Max-Age=600",
-    ].join("; "),
+    "Set-Cookie", [
+        [
+            `oauth_state=${encodeURIComponent(state)}`,
+            "HttpOnly",
+            "Secure",
+            "SameSite=Lax",
+            "Path=/",
+            "Max-Age=600",
+        ].join("; "),
+        [
+            `oauth_return_to=${encodeURIComponent(returnTo)}`,
+            "HttpOnly",
+            "Secure",
+            "SameSite=Lax",
+            "Path=/",
+            "Max-Age=600",
+        ].join("; "),
+    ]
   )
 
   const params = new URLSearchParams({

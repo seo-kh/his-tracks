@@ -1,6 +1,5 @@
 node_modules/
 dist/
-<<<<<<< HEAD
 build/
 .cache/
 .env*
@@ -20,11 +19,3 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
-=======
-dist-server/
-.vercel/
-.env
-.env.local
-AGENTS.md
-CLAUDE.md
->>>>>>> origin/master

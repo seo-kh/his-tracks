@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
-<<<<<<< HEAD
 import siteConfiguration from './.figma/make/site.json'
 
 // Vite config — https://vitejs.dev/config/
@@ -24,22 +23,10 @@ export default defineConfig(({ mode }) => {
           cloud: path.resolve(__dirname, 'cloud/index.html'),
         },
       },
-=======
-// Vite config — https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const emitSourcemaps = mode === 'development'
-
-  return {
-    base: '/',
-    build: {
-      sourcemap: emitSourcemaps ? 'inline' : false,
-      minify: !emitSourcemaps,
->>>>>>> origin/master
     },
     plugins: [
       react(),
       tailwindcss(),
-<<<<<<< HEAD
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -63,38 +50,6 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
-=======
-    ],
-    resolve: {
-      alias: {
-        '@': path.resolve(import.meta.dirname, './src'),
-      },
-    },
-    server: {
-      host: '0.0.0.0',
-      port: parseInt(process.env.PORT || '5173'),
-      headers: {
-        'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-      },
-      proxy: {
-        '/auth': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-        },
-        '/health': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-        },
-        '/api': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-        },
-      },
-    },
-    preview: {
-      host: '0.0.0.0',
-      port: parseInt(process.env.PORT || '5173'),
->>>>>>> origin/master
     },
   }
 })
@@ -325,13 +280,9 @@ function figmaErrorOverlayReplay(): Plugin {
  * the old tree mounted until the page is reloaded.
  */
 function figmaReactRefreshBoundaryFallback(): Plugin {
-<<<<<<< HEAD
   type ModuleNode = import('vite').ModuleNode
   const hadRefreshBoundary = new Map<string, boolean>()
   const lostRefreshBoundaries = new Set<string>()
-=======
-  const hadRefreshBoundary = new Map<string, boolean>()
->>>>>>> origin/master
   let sendFullReload: (() => void) | null = null
 
   return {
@@ -341,7 +292,6 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
     configureServer(server) {
       sendFullReload = () => server.ws.send({ type: 'full-reload', path: '*' })
     },
-<<<<<<< HEAD
     handleHotUpdate({ modules, server, timestamp }) {
       if (lostRefreshBoundaries.size === 0) return
 
@@ -365,8 +315,6 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
         pending.push(...current.importers)
       }
     },
-=======
->>>>>>> origin/master
     transform(code, id) {
       if (!/\.[jt]sx?(?:\?|$)/.test(id) || id.includes('/node_modules/')) return null
 
@@ -375,13 +323,9 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
       const previousHadRefreshBoundary = hadRefreshBoundary.get(moduleId)
       hadRefreshBoundary.set(moduleId, hasRefreshBoundary)
 
-<<<<<<< HEAD
       if (hasRefreshBoundary) lostRefreshBoundaries.delete(moduleId)
       if (previousHadRefreshBoundary && !hasRefreshBoundary) {
         lostRefreshBoundaries.add(moduleId)
-=======
-      if (previousHadRefreshBoundary && !hasRefreshBoundary) {
->>>>>>> origin/master
         queueMicrotask(() => sendFullReload?.())
       }
 

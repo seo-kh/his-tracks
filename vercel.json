@@ -1,0 +1,18 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/auth/google/callback",
+      "destination": "/api/auth/callback"
+    },
+    {
+      "source": "/auth/google",
+      "destination": "/api/auth/google"
+    },
+    {
+      "source": "/auth/logout",
+      "destination": "/api/auth/logout"
+    }
+  ]
+}

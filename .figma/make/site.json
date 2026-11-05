@@ -1,0 +1,10 @@
+{
+  "description": "This multi-track audio player allows users to load, control, and manage audio files with features like volume adjustment, mute, and playback controls, perfect for musicians and audio enthusiasts.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
